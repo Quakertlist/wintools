@@ -7,6 +7,8 @@
 #include "CollateFilesDlg.h"
 #include "afxdialogex.h"
 
+#include "winapi\folderDlg.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -51,13 +53,17 @@ END_MESSAGE_MAP()
 
 CCollateFilesDlg::CCollateFilesDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_COLLATEFILES_DIALOG, pParent)
+    , m_edtSrcFolder(_T(""))
+    , m_edtDstFolder(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
 void CCollateFilesDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialogEx::DoDataExchange(pDX);
+    CDialogEx::DoDataExchange(pDX);
+    DDX_Text(pDX, EDT_SOURCE_FOLDER, m_edtSrcFolder);
+    DDX_Text(pDX, EDT_DEST_FOLER, m_edtDstFolder);
 }
 
 BEGIN_MESSAGE_MAP(CCollateFilesDlg, CDialogEx)
@@ -65,6 +71,8 @@ BEGIN_MESSAGE_MAP(CCollateFilesDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
     ON_BN_CLICKED(BTN_START, &CCollateFilesDlg::OnBnClickedStart)
+    ON_BN_CLICKED(BTN_SELECT_SOURCE_FOLDER, &CCollateFilesDlg::OnBnClickedSelectSourceFolder)
+    ON_BN_CLICKED(BTN_SELECT_DEST_FOLDER, &CCollateFilesDlg::OnBnClickedSelectDestFolder)
 END_MESSAGE_MAP()
 
 
@@ -158,5 +166,52 @@ HCURSOR CCollateFilesDlg::OnQueryDragIcon()
  */
 void CCollateFilesDlg::OnBnClickedStart()
 {
+    this->UpdateData(TRUE);
+    if (m_edtDstFolder.IsEmpty())
+    {
+        AfxMessageBox(IDS_ERROR_TIP1, MB_OK|MB_ICONERROR);
+        return;
+    }
+    if (m_edtSrcFolder.IsEmpty())
+    {
+        AfxMessageBox(IDS_ERROR_TIP2, MB_OK | MB_ICONERROR);
+        return;
+    }
+    enableControlles(FALSE);
+    enableControlles(TRUE);
+}
+
+
+/**
+ * 选择源文件路径
+ */
+void CCollateFilesDlg::OnBnClickedSelectSourceFolder()
+{
     // TODO: 在此添加控件通知处理程序代码
+    m_edtSrcFolder = SelectFolder(GetSafeHwnd());
+    UpdateData(FALSE);
+}
+
+/**
+ * 选择目标文件路径
+ */
+void CCollateFilesDlg::OnBnClickedSelectDestFolder()
+{
+    // TODO: 在此添加控件通知处理程序代码
+    m_edtDstFolder = SelectFolder(GetSafeHwnd());
+    UpdateData(FALSE);
+}
+
+void CCollateFilesDlg::enableControlles(BOOL bEnable)
+{
+    UINT ids[] = { BTN_SELECT_DEST_FOLDER, BTN_SELECT_SOURCE_FOLDER, BTN_START };
+    for each (UINT id in ids)
+    {
+        GetDlgItem(id)->EnableWindow(bEnable);
+    }
+}
+
+void CCollateFilesDlg::collateFiles()
+{
+
 }

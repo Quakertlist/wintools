@@ -20,3 +20,6 @@
 *.VC.opendb
 /CollateFilesSolution/.vs/CollateFilesSolution/v14/*.suo
 /CollateFilesSolution/CollateFiles
+/CollateFilesSolution/Debug/*.pdb
+/CollateFilesSolution/ipch
+/CollateFilesSolution/Debug

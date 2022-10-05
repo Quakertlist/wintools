@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "afxwin.h"
 
 
 // CCollateFilesDlg ¶Ô»°¿ò
@@ -31,6 +32,15 @@ protected:
 	afx_msg void OnPaint();
     afx_msg HCURSOR OnQueryDragIcon();
     afx_msg void OnBnClickedStart();
+    afx_msg void OnBnClickedSelectSourceFolder();
+    afx_msg void OnBnClickedSelectDestFolder();
 	DECLARE_MESSAGE_MAP()
-public:
+   
+private:
+    void enableControlles(BOOL bEnable);
+    void collateFiles();
+
+private:
+    CString m_edtSrcFolder;
+    CString m_edtDstFolder;
 };

@@ -18,3 +18,5 @@
 # Visual Studio 文件过滤
 *.VC.db
 *.VC.opendb
+/CollateFilesSolution/.vs/CollateFilesSolution/v14/*.suo
+/CollateFilesSolution/CollateFiles

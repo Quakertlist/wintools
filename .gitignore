@@ -13,3 +13,8 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+
+# Visual Studio 文件过滤
+*.VC.db
+*.VC.opendb

@@ -49,7 +49,10 @@ BOOL CCollateFilesApp::InitInstance()
 	InitCtrls.dwICC = ICC_WIN95_CLASSES;
 	InitCommonControlsEx(&InitCtrls);
 
-	CWinApp::InitInstance();
+    CWinApp::InitInstance(); 
+    // ³õÊ¼»¯Richedit¿Ø¼þ
+    AfxInitRichEdit2();
+
 
 
 	AfxEnableControlContainer();

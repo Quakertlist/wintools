@@ -39,6 +39,15 @@
     <ClInclude Include="winapi\folderDlg.h">
       <Filter>winapi</Filter>
     </ClInclude>
+    <ClInclude Include="FileNodeInfo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FileNodeCollect.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="winapi\mkdir.h">
+      <Filter>winapi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CollateFiles.cpp">
@@ -51,6 +60,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="winapi\folderDlg.cpp">
+      <Filter>winapi</Filter>
+    </ClCompile>
+    <ClCompile Include="FileNodeInfo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FileNodeCollect.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="winapi\mkdir.cpp">
       <Filter>winapi</Filter>
     </ClCompile>
   </ItemGroup>

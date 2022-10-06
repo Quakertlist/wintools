@@ -8,6 +8,7 @@
 #include "afxdialogex.h"
 
 #include "winapi\folderDlg.h"
+#include "winapi\mkdir.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -167,6 +168,12 @@ HCURSOR CCollateFilesDlg::OnQueryDragIcon()
 void CCollateFilesDlg::OnBnClickedStart()
 {
     this->UpdateData(TRUE);
+
+#ifdef _DEBUG
+    m_edtSrcFolder = _T("E:\\projects\\github.com\\Quakertlist\\wintools");
+    m_edtDstFolder = _T("E:\\projects\\github.com\\Quakertlist\\wintools\\sample");
+#endif // _DEBUG
+
     if (m_edtDstFolder.IsEmpty())
     {
         AfxMessageBox(IDS_ERROR_TIP1, MB_OK|MB_ICONERROR);
@@ -177,7 +184,13 @@ void CCollateFilesDlg::OnBnClickedStart()
         AfxMessageBox(IDS_ERROR_TIP2, MB_OK | MB_ICONERROR);
         return;
     }
+    if (m_edtSrcFolder == m_edtDstFolder)
+    {
+        AfxMessageBox(IDS_ERROR_TIP3, MB_OK | MB_ICONERROR);
+        return;
+    }
     enableControlles(FALSE);
+    tidyFiles();
     enableControlles(TRUE);
 }
 
@@ -211,7 +224,55 @@ void CCollateFilesDlg::enableControlles(BOOL bEnable)
     }
 }
 
-void CCollateFilesDlg::collateFiles()
+void CCollateFilesDlg::tidyFiles()
 {
+    collateFiles(m_edtSrcFolder);
+    processFiles();
+}
 
+void CCollateFilesDlg::collateFiles(const CString &strRootPath, LPCTSTR lpszSuffix/*=_T("*.*")*/)
+{
+    CFileFind ffd;
+    BOOL bWorking = ffd.FindFile(strRootPath + _T("\\") + lpszSuffix);
+    while (bWorking)
+    {
+        bWorking = ffd.FindNextFileW();
+        CString strFileName = ffd.GetFileName();
+        if (_T(".") == strFileName || _T("..") == strFileName)
+        {
+            continue;
+        }
+        CFileNodeInfo cFileNodeInfo;
+        if (ffd.IsDirectory())
+        {
+            cFileNodeInfo.SetFileNodeMode(CFileNodeInfo::FNM_DIR);
+            cFileNodeInfo.SetPathInfo(strRootPath, strFileName);
+        }
+        else
+        {
+            cFileNodeInfo.SetFileNodeMode(CFileNodeInfo::FNM_FILE);
+            cFileNodeInfo.SetPathInfo(strRootPath, strFileName);
+            m_cFileNodeCollect.AddFileNode(cFileNodeInfo);
+        }
+
+        if (cFileNodeInfo.GetFileNodeMode()==CFileNodeInfo::FNM_DIR) 
+        {
+            collateFiles(cFileNodeInfo.GetFullPath(), lpszSuffix);
+        }
+    }
+
+}
+
+void CCollateFilesDlg::processFiles()
+{
+    m_cFileNodeCollect.ForEach(std::bind(&CCollateFilesDlg::processFile, this, std::placeholders::_1));
+}
+
+bool CCollateFilesDlg::processFile(const CFileNodeInfo& info)
+{
+    CString strFullPath = info.GetFullPath();
+    strFullPath.Replace(m_edtSrcFolder, m_edtDstFolder);
+    MKDir(strFullPath);
+    CopyFile(info.GetFullPath(), strFullPath, FALSE);
+    return true;
 }

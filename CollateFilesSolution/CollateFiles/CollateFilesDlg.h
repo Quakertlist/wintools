@@ -5,6 +5,8 @@
 #pragma once
 #include "afxwin.h"
 
+#include "FileNodeCollect.h"
+
 
 // CCollateFilesDlg ¶Ô»°¿ò
 class CCollateFilesDlg : public CDialogEx
@@ -38,9 +40,13 @@ protected:
    
 private:
     void enableControlles(BOOL bEnable);
-    void collateFiles();
+    void tidyFiles();
+    void collateFiles(const CString &strRootPath, LPCTSTR lpszSuffix=_T("*.*"));
+    void processFiles();
+    bool processFile(const CFileNodeInfo& info);
 
 private:
     CString m_edtSrcFolder;
     CString m_edtDstFolder;
+    CFileNodeCollect    m_cFileNodeCollect;
 };

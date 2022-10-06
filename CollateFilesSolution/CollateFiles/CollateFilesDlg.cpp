@@ -68,6 +68,21 @@ void CCollateFilesDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, REDT_RESULT, m_redtResult);
 }
 
+void CCollateFilesDlg::ProcessTidyFiles()
+{
+    tidyFiles();
+    ReportProcessStatus(PS_END, _T("操作完毕"), PST_INFO);
+}
+
+void CCollateFilesDlg::ReportProcessStatus(PROCESS_STEP nStep, const CString &strText, PROCESS_STATUS_TYPE nType)
+{
+    ProcessStepParam *pParam = new ProcessStepParam();
+    pParam->m_nStatusType = nType;
+    pParam->m_nStep = nStep;
+    pParam->m_strText = strText;
+    PostMessage(WM_NOTIFY_PROCESSSTEP, 0, (LPARAM)pParam);
+}
+
 BEGIN_MESSAGE_MAP(CCollateFilesDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
@@ -75,6 +90,7 @@ BEGIN_MESSAGE_MAP(CCollateFilesDlg, CDialogEx)
     ON_BN_CLICKED(BTN_START, &CCollateFilesDlg::OnBnClickedStart)
     ON_BN_CLICKED(BTN_SELECT_SOURCE_FOLDER, &CCollateFilesDlg::OnBnClickedSelectSourceFolder)
     ON_BN_CLICKED(BTN_SELECT_DEST_FOLDER, &CCollateFilesDlg::OnBnClickedSelectDestFolder)
+    ON_MESSAGE(WM_NOTIFY_PROCESSSTEP, &CCollateFilesDlg::OnProcessStepNotify)
 END_MESSAGE_MAP()
 
 
@@ -162,6 +178,13 @@ HCURSOR CCollateFilesDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+UINT processTidyFilesThread(LPVOID lpParam) {
+    CCollateFilesDlg *pdlg = (CCollateFilesDlg*)lpParam;
+    pdlg->ProcessTidyFiles();
+    return 0;
+}
+
 /**
  * 开始处理
  */
@@ -189,9 +212,9 @@ void CCollateFilesDlg::OnBnClickedStart()
         AfxMessageBox(IDS_ERROR_TIP3, MB_OK | MB_ICONERROR);
         return;
     }
-    enableControlles(FALSE);
-    tidyFiles();
-    enableControlles(TRUE);
+    EnableControlles(FALSE);
+    m_strResult = _T("");
+    AfxBeginThread(processTidyFilesThread, this);
 }
 
 
@@ -215,7 +238,39 @@ void CCollateFilesDlg::OnBnClickedSelectDestFolder()
     UpdateData(FALSE);
 }
 
-void CCollateFilesDlg::enableControlles(BOOL bEnable)
+LRESULT CCollateFilesDlg::OnProcessStepNotify(WPARAM wParam, LPARAM lParam)
+{
+    ProcessStepParam *pParam = (ProcessStepParam*)lParam;
+    switch (pParam->m_nStatusType)
+    {
+    case PST_WARN:
+        appendResult(pParam->m_strText, RGB(255, 255, 0), TRUE, TRUE);
+        break;
+    case PST_ERROR:
+        appendResult(pParam->m_strText, RGB(255, 0, 0), TRUE, FALSE);
+        break;
+    case PST_INFO:
+        appendResult(pParam->m_strText, RGB(0, 128, 128), FALSE, FALSE);
+        break;
+    default:
+        break;
+    }
+    switch (pParam->m_nStep)
+    {
+    case PS_START:
+        EnableControlles(FALSE);
+        break;
+    case PS_END:
+        EnableControlles(TRUE);
+        break;
+    default:
+        break;
+    }
+    delete pParam;
+    return 0;
+}
+
+void CCollateFilesDlg::EnableControlles(BOOL bEnable)
 {
     UINT ids[] = { BTN_SELECT_DEST_FOLDER, BTN_SELECT_SOURCE_FOLDER, BTN_START };
     for each (UINT id in ids)
@@ -226,6 +281,7 @@ void CCollateFilesDlg::enableControlles(BOOL bEnable)
 
 void CCollateFilesDlg::tidyFiles()
 {
+    ReportProcessStatus(PS_START, _T("开始整理文件"), PST_INFO);
     collateFiles(m_edtSrcFolder);
     processFiles();
 }
@@ -247,14 +303,14 @@ void CCollateFilesDlg::collateFiles(const CString &strRootPath, LPCTSTR lpszSuff
         {
             cFileNodeInfo.SetFileNodeMode(CFileNodeInfo::FNM_DIR);
             cFileNodeInfo.SetPathInfo(strRootPath, strFileName);
-            appendResult(_T("找到了") + cFileNodeInfo.GetFullPath() + _T("目录"), RGB(123, 32, 124), TRUE, TRUE);
+            ReportProcessStatus(PS_PROCESSING, _T("找到了") + cFileNodeInfo.GetFullPath() + _T("目录"), PST_INFO);
         }
         else
         {
             cFileNodeInfo.SetFileNodeMode(CFileNodeInfo::FNM_FILE);
             cFileNodeInfo.SetPathInfo(strRootPath, strFileName);
             m_cFileNodeCollect.AddFileNode(cFileNodeInfo);
-            appendResult(_T("找到了") + cFileNodeInfo.GetFullPath() + _T("文件"), RGB(218, 123, 42), FALSE, TRUE);
+            ReportProcessStatus(PS_PROCESSING, _T("找到了") + cFileNodeInfo.GetFullPath() + _T("文件"), PST_INFO);
         }
 
         if (cFileNodeInfo.GetFileNodeMode()==CFileNodeInfo::FNM_DIR) 
@@ -282,7 +338,7 @@ bool CCollateFilesDlg::processFile(const CFileNodeInfo& info)
     }
     strDstFile +=  info.GetFileName();
     CopyFile(strSrcFile, strDstFile, FALSE);
-    appendResult(_T("移动文件")+ strSrcFile +_T("到")+ strDstFile, RGB(34, 32, 12), TRUE, TRUE);
+    ReportProcessStatus(PS_PROCESSING, _T("移动文件") + strSrcFile + _T("到") + strDstFile, PST_INFO);
     return true;
 }
 
@@ -309,4 +365,5 @@ void CCollateFilesDlg::appendResult(const CString &strText, COLORREF color, BOOL
     m_redtResult.SetWindowText(m_strResult);
     m_redtResult.SetSel(nOldTextLen, nNewTextLen);
     m_redtResult.SetSelectionCharFormat(cf);
+    m_redtResult.LineScroll(m_redtResult.GetLineCount());
 }

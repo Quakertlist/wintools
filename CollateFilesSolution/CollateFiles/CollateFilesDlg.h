@@ -9,6 +9,28 @@
 #include "afxcmn.h"
 
 
+enum PROCESS_STEP
+{
+    PS_START,
+    PS_PROCESSING,
+    PS_END,
+};
+enum PROCESS_STATUS_TYPE
+{
+    PST_INFO,
+    PST_WARN,
+    PST_ERROR,
+};
+
+struct ProcessStepParam
+{
+    PROCESS_STEP m_nStep;
+    PROCESS_STATUS_TYPE m_nStatusType;
+    CString     m_strText;
+};
+
+#define WM_NOTIFY_PROCESSSTEP   (WM_USER+1)
+
 // CCollateFilesDlg 对话框
 class CCollateFilesDlg : public CDialogEx
 {
@@ -24,6 +46,11 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
 
+public:
+
+    void EnableControlles(BOOL bEnable);
+    void ProcessTidyFiles();
+    void ReportProcessStatus(PROCESS_STEP nStep, const CString &strText, PROCESS_STATUS_TYPE nType);
 
 // 实现
 protected:
@@ -37,10 +64,10 @@ protected:
     afx_msg void OnBnClickedStart();
     afx_msg void OnBnClickedSelectSourceFolder();
     afx_msg void OnBnClickedSelectDestFolder();
+    afx_msg LRESULT OnProcessStepNotify(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
    
 private:
-    void enableControlles(BOOL bEnable);
     void tidyFiles();
     void collateFiles(const CString &strRootPath, LPCTSTR lpszSuffix=_T("*.*"));
     void processFiles();

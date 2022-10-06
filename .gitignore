@@ -18,8 +18,14 @@
 # Visual Studio 文件过滤
 *.VC.db
 *.VC.opendb
-/CollateFilesSolution/.vs/CollateFilesSolution/v14/*.suo
-/CollateFilesSolution/CollateFiles
-/CollateFilesSolution/Debug/*.pdb
-/CollateFilesSolution/ipch
-/CollateFilesSolution/Debug
+*.suo
+*.pch
+*.log
+*.tlog
+*.obj
+*.pdb
+*.idb
+*.ilk
+*.iobj
+*.ipch
+*.ipdb

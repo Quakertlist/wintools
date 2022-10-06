@@ -331,6 +331,11 @@ bool CCollateFilesDlg::processFile(const CFileNodeInfo& info)
     CString strSrcFile = info.GetFullPath();
     CString strDstFile;
     CTime cCreateTime = info.GetFileTime(CFileNodeInfo::FS_CREATE_TIME);
+    CTime cModifyTime = info.GetFileTime(CFileNodeInfo::FS_MODIFY_TIME);
+    if (cModifyTime < cCreateTime)
+    {
+        cCreateTime = cModifyTime;
+    }
     strDstFile.Format(_T("%s\\%04d-%02d-%02d\\"), m_edtDstFolder, cCreateTime.GetYear(), cCreateTime.GetMonth(), cCreateTime.GetDay());
     if (_taccess(strDstFile, 0)!=0)
     {

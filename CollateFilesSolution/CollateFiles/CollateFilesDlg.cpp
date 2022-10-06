@@ -65,6 +65,7 @@ void CCollateFilesDlg::DoDataExchange(CDataExchange* pDX)
     CDialogEx::DoDataExchange(pDX);
     DDX_Text(pDX, EDT_SOURCE_FOLDER, m_edtSrcFolder);
     DDX_Text(pDX, EDT_DEST_FOLER, m_edtDstFolder);
+    DDX_Control(pDX, REDT_RESULT, m_redtResult);
 }
 
 BEGIN_MESSAGE_MAP(CCollateFilesDlg, CDialogEx)
@@ -109,7 +110,6 @@ BOOL CCollateFilesDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
-
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -247,12 +247,14 @@ void CCollateFilesDlg::collateFiles(const CString &strRootPath, LPCTSTR lpszSuff
         {
             cFileNodeInfo.SetFileNodeMode(CFileNodeInfo::FNM_DIR);
             cFileNodeInfo.SetPathInfo(strRootPath, strFileName);
+            appendResult(_T("找到了") + cFileNodeInfo.GetFullPath() + _T("目录"), RGB(123, 32, 124), TRUE, TRUE);
         }
         else
         {
             cFileNodeInfo.SetFileNodeMode(CFileNodeInfo::FNM_FILE);
             cFileNodeInfo.SetPathInfo(strRootPath, strFileName);
             m_cFileNodeCollect.AddFileNode(cFileNodeInfo);
+            appendResult(_T("找到了") + cFileNodeInfo.GetFullPath() + _T("文件"), RGB(218, 123, 42), FALSE, TRUE);
         }
 
         if (cFileNodeInfo.GetFileNodeMode()==CFileNodeInfo::FNM_DIR) 
@@ -270,9 +272,41 @@ void CCollateFilesDlg::processFiles()
 
 bool CCollateFilesDlg::processFile(const CFileNodeInfo& info)
 {
-    CString strFullPath = info.GetFullPath();
-    strFullPath.Replace(m_edtSrcFolder, m_edtDstFolder);
-    MKDir(strFullPath);
-    CopyFile(info.GetFullPath(), strFullPath, FALSE);
+    CString strSrcFile = info.GetFullPath();
+    CString strDstFile;
+    CTime cCreateTime = info.GetFileTime(CFileNodeInfo::FS_CREATE_TIME);
+    strDstFile.Format(_T("%s\\%04d-%02d-%02d\\"), m_edtDstFolder, cCreateTime.GetYear(), cCreateTime.GetMonth(), cCreateTime.GetDay());
+    if (_taccess(strDstFile, 0)!=0)
+    {
+        MKDir(strDstFile);
+    }
+    strDstFile +=  info.GetFileName();
+    CopyFile(strSrcFile, strDstFile, FALSE);
+    appendResult(_T("移动文件")+ strSrcFile +_T("到")+ strDstFile, RGB(34, 32, 12), TRUE, TRUE);
     return true;
+}
+
+void CCollateFilesDlg::appendResult(const CString &strText, COLORREF color, BOOL bBold, BOOL bItalic)
+{
+    int nOldTextLen = m_strResult.GetLength();
+    CTime tmNow = CTime::GetCurrentTime();
+    CString strAppendText;
+    strAppendText.Format(_T("%04d-%02d-%02d %02d:%02d:%02d %s"),
+        tmNow.GetYear(), tmNow.GetMonth(), tmNow.GetDay(),
+        tmNow.GetHour(), tmNow.GetMinute(), tmNow.GetSecond(),
+        strText);
+
+
+    CHARFORMAT cf = { 0 };
+    cf.cbSize = sizeof(cf);
+    cf.dwMask = (bBold ? CFM_BOLD : 0) | (bItalic ? CFM_ITALIC : 0) | CFM_COLOR;
+    cf.dwEffects = (bBold ? CFE_BOLD : 0) | (bItalic ? CFE_ITALIC : 0) | ~CFE_AUTOCOLOR;
+    cf.crTextColor = color;
+
+    m_strResult.Append(strAppendText);
+    int nNewTextLen = m_strResult.GetLength();
+    m_strResult.Append(_T("\n"));
+    m_redtResult.SetWindowText(m_strResult);
+    m_redtResult.SetSel(nOldTextLen, nNewTextLen);
+    m_redtResult.SetSelectionCharFormat(cf);
 }

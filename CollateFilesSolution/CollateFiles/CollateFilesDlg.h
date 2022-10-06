@@ -6,6 +6,7 @@
 #include "afxwin.h"
 
 #include "FileNodeCollect.h"
+#include "afxcmn.h"
 
 
 // CCollateFilesDlg ¶Ô»°¿ò
@@ -45,8 +46,12 @@ private:
     void processFiles();
     bool processFile(const CFileNodeInfo& info);
 
+    void appendResult(const CString &strText, COLORREF color, BOOL bBold, BOOL bItalic);
+
 private:
     CString m_edtSrcFolder;
     CString m_edtDstFolder;
     CFileNodeCollect    m_cFileNodeCollect;
+    CRichEditCtrl m_redtResult;
+    CString m_strResult;
 };
